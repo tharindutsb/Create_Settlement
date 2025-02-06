@@ -1,0 +1,114 @@
+/*
+
+API # :
+Name :
+Description :
+Created By :
+Created No :
+
+IP : case status
+OP : status,status description,case phase
+*/
+
+
+
+/*
+assumption:
+    1. created_By is the user who is creating the settlement
+    2. settelment_type is the type of settlement (A or B)
+    3. settelement_amount is the amount of settlement
+    4. DRC_ID is the ID of the DRC
+    5. case_id is the ID of the case
+    6. settelement A array is the array of initial amount and number of months
+    7. settelement B array is the array of initial amount and amount of each month
+    8. monitor_array is the array of settlement A or B array
+    9. element is the element of monitor_array
+    10. setelment phase is the function to get the settlement phase
+
+
+
+    11. elemenet of array should be positive number
+
+
+*/
+
+Begin
+
+
+
+try {
+    Read Parameter: 
+    created_By,settelment_type,settelement_amount,DRC_ID,case_id,
+    settelement A array  = [Initial_amount,num_months] , settelement B array = [Initial_amount,amount_1..amount_12] 
+
+validation :
+// check if the required fields are not null(Mandatory fields)
+    if created_By is null :
+        raise customise exception "Created By can not null";
+    if settelment_type is null :
+        raise customise exception "Settelment Type can not null";
+    if settelement_amount is null :
+        raise customise exception "Settelment Amount can not null";
+    // if DRC_ID is null :
+    //     raise customise exception "DRC ID can not null";
+    if case_id is null :
+        raise customise exception "Case ID can not null";
+    if settelement A array is null && settelement B array is null :
+        raise customise exception "Settelment A array can not null";
+    
+    //Type validation for the fields
+    if typeof(settelment_amount) != 'double' :
+        raise customise exception "Settelment Type should be a double";
+    
+    case settelment_type :
+        when 'A' :
+            if typeof(settelement A array) != 'array' :
+                raise customise exception "Settelment A array should be an array";
+        when 'B' :
+            if typeof(settelement B array) != 'array' :
+                raise customise exception "Settelment B array should be an array";
+        default :
+            raise customise exception "Invalid Settelment Type";
+
+    if settelment_type == 'A' :
+        monitor_array = settelement A array;
+    else :
+        monitor_array = settelement B array;
+
+    //validate the element of settlement A array
+    if settelment_type == 'A'&& array_length(monitor_array) != 2 :
+        raise customise exception "Settelment A array should have 2 elements";
+    else if settelment_type == 'A' :
+        if typeof(monitor_array[0]) != 'double' :
+            raise customise exception "Initial amount should be double";
+        if typeof(monitor_array[1]) != 'int' :
+            raise customise exception "Number of months should be an integer";
+    else if settelment_type == 'B' && array_length( monitor_array) > 2 & array_length(monitor_array) < 13 :
+        raise customise exception "Settelment B array should have 13 elements";
+    else if settelment_type == 'B':
+        // element of settlement array should be double
+        if typeof(monitor_array) == 'array' :
+        for element in monitor_array:
+            if typeof(element) != 'double' :
+                raise customise exception "Element of Settelment A array should be a double";
+
+Read case details by using case_id;
+
+    
+//get the settlement phase by calling API /Case_Phase
+settelement_phase = case_phase(case.case_id);
+if settelement_phase.status IN ['Negotiation', 'Mediation Board'] && DRC_ID is null :
+    raise customise exception settelement_phase.status_description;
+
+insert into case_settlements 
+
+} catch customise exception(err) {
+    status = error;
+    status_description = err.description;
+    
+} catch(err) {
+    status = error;
+    status_description = err.description;
+    
+}
+End
