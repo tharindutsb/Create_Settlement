@@ -22,6 +22,49 @@ def settlement_helper(settlement) -> dict:
         "ro_id": settlement.get("ro_id"),
     }
 
+# Validate settlement data
+def validate_settlement_data(created_by: str, settlement_type: str, settlement_amount: float, drc_id: str, case_id: str, settlement_A_array: list, settlement_B_array: list):
+    if not created_by:
+        raise ValueError("Created By cannot be null")
+    if not settlement_type:
+        raise ValueError("Settlement Type cannot be null")
+    if not settlement_amount:
+        raise ValueError("Settlement Amount cannot be null")
+    if not case_id:
+        raise ValueError("Case ID cannot be null")
+    if settlement_A_array is None and settlement_B_array is None:
+        raise ValueError("Settlement A array cannot be null")
+
+    if not isinstance(settlement_amount, float):
+        raise ValueError("Settlement Amount should be a double")
+
+    if settlement_type == 'A':
+        if not isinstance(settlement_A_array, list):
+            raise ValueError("Settlement A array should be an array")
+        if len(settlement_A_array) != 2:
+            raise ValueError("Settlement A array should have 2 elements")
+        if not isinstance(settlement_A_array[0], float):
+            raise ValueError("Initial amount should be a double")
+        if not isinstance(settlement_A_array[1], int):
+            raise ValueError("Number of months should be an integer")
+    elif settlement_type == 'B':
+        if not isinstance(settlement_B_array, list):
+            raise ValueError("Settlement B array should be an array")
+        if len(settlement_B_array) < 2 or len(settlement_B_array) > 13:
+            raise ValueError("Settlement B array should have between 2 and 13 elements")
+        for element in settlement_B_array:
+            if not isinstance(element, float):
+                raise ValueError("Element of Settlement B array should be a double")
+    else:
+        raise ValueError("Invalid Settlement Type")
+
+    # Simulate reading case details and getting settlement phase
+    settlement_phase = "Negotiation"  # Placeholder for actual logic
+    if settlement_phase in ['Negotiation', 'Mediation Board'] and not drc_id:
+        raise ValueError("DRC ID cannot be null during Negotiation or Mediation Board phase")
+
+    return {"status": "success", "status_description": "Validation passed", "case_phase": settlement_phase}
+
 # Create a new settlement
 async def create_settlement(settlement: Settlement):
     new_settlement = await case_settlements_collection.insert_one(settlement.model_dump())
