@@ -5,8 +5,7 @@ from openApi.services.case_settlement_services import (
     get_settlements,
     get_settlement_by_id,
     update_settlement,
-    delete_settlement,
-    validate_settlement_data
+    delete_settlement
 )
 
 router = APIRouter()
@@ -119,29 +118,3 @@ async def remove_settlement(settlement_id: str):
     if not deleted:
         raise HTTPException(status_code=404, detail="Settlement not found")
     return {"message": "Settlement deleted successfully"}
-
-@router.post("/settlements/validate", response_model=dict, tags=["Settlements"], summary="Validate settlement data")
-async def validate_settlement(
-    created_by: str = Body(...),
-    settlement_type: str = Body(...),
-    settlement_amount: float = Body(...),
-    drc_id: str = Body(None),
-    case_id: str = Body(...),
-    settlement_A_array: list = Body(None),
-    settlement_B_array: list = Body(None)
-):
-    """
-    Validate settlement data.
-
-    - **created_by**: User who created the settlement
-    - **settlement_type**: Type of the settlement (A or B)
-    - **settlement_amount**: Amount of the settlement
-    - **drc_id**: ID of the DRC (optional)
-    - **case_id**: ID of the case
-    - **settlement_A_array**: Array of initial amount and number of months (optional)
-    - **settlement_B_array**: Array of initial amount and monthly amounts (optional)
-    """
-    try:
-        return validate_settlement_data(created_by, settlement_type, settlement_amount, drc_id, case_id, settlement_A_array, settlement_B_array)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
