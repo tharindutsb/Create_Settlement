@@ -18,14 +18,14 @@
 DEFINE CLASS CommissionSettlementSystem:
     
     // Constructor to initialize loan details and balances
-    FUNCTION __init__(initial_loan):
+    FUNCTION __init__(initial_arrears):
         // Validate that the loan amount is positive
-        IF initial_loan <= 0 THEN
+        IF initial_arrears <= 0 THEN
             RAISE ERROR "Loan amount must be greater than zero"
         ENDIF
 
         // Initialize balances and lists
-        SET self.pending_arrears = initial_loan  // Remaining loan amount
+        SET self.pending_arrears = initial_arrears  // Remaining loan amount
         SET self.running_balance = 0  // Balance available for payments
         SET self.bills = EMPTY LIST  // Stores bills
         SET self.payments = EMPTY LIST  // Stores payments
