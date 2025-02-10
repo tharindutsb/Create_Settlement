@@ -1,0 +1,99 @@
+/*
+  ===============================
+   Commission Settlement System
+  ===============================
+
+    Assumptions:
+    1. The system tracks loan (arrears) payments and settlements.
+    2. An initial loan (arrears) amount is assigned to a user upon plan creation.
+    3. Payments made by the user first settle any outstanding bills.
+    4. Any remaining payment amount after bill settlement reduces the arrears.
+    5. If a payment is insufficient to fully pay a bill, it partially pays it.
+    6. If multiple bills exist, the oldest bills are settled first.
+    7. The system ensures all bills are cleared before reducing arrears.
+    8. Negative or zero payments and bills are not allowed.
+    9. The system can handle multiple transactions.
+*/
+
+DEFINE CLASS CommissionSettlementSystem:
+    
+    // Constructor to initialize loan details and balances
+    FUNCTION __init__(initial_loan):
+        // Validate that the loan amount is positive
+        IF initial_loan <= 0 THEN
+            RAISE ERROR "Loan amount must be greater than zero"
+        ENDIF
+
+        // Initialize balances and lists
+        SET self.pending_arrears = initial_loan  // Remaining loan amount
+        SET self.running_balance = 0  // Balance available for payments
+        SET self.bills = EMPTY LIST  // Stores bills
+        SET self.payments = EMPTY LIST  // Stores payments
+    ENDFUNCTION
+
+    // Function to add a payment
+    FUNCTION add_payment(amount):
+        // Validate that the payment amount is positive
+        IF amount <= 0 THEN
+            RAISE ERROR "Invalid payment amount"
+        ENDIF
+
+        // Store the payment
+        APPEND amount TO self.payments
+        
+        // Add the payment to the available balance
+        INCREASE self.running_balance BY amount
+
+        // First settle bills
+        CALL process_bills()
+
+        // Then reduce arrears with remaining balance
+        CALL settle_arrears()
+    ENDFUNCTION
+
+    // Function to add a bill
+    FUNCTION add_bill(amount):
+        // Validate that the bill amount is positive
+        IF amount <= 0 THEN
+            RAISE ERROR "Invalid bill amount"
+        ENDIF
+
+        // Store the bill
+        APPEND amount TO self.bills
+    ENDFUNCTION
+
+    // Function to process and settle outstanding bills first
+    FUNCTION process_bills():
+        FOR EACH bill IN self.bills:
+            IF bill > 0 THEN  // Check only unpaid bills
+                IF self.running_balance >= bill THEN
+                    DECREASE self.running_balance BY bill  // Fully pay the bill
+                    SET bill = 0  // Mark bill as paid
+                ELSE
+                    DECREASE bill BY self.running_balance  // Partial payment
+                    SET self.running_balance = 0  // No funds left
+                    BREAK  // Stop processing if no funds left
+                ENDIF
+            ENDIF
+        ENDFOR
+    ENDFUNCTION
+
+    // Function to reduce arrears after all bills are paid
+    FUNCTION settle_arrears():
+        IF self.running_balance > 0 THEN
+            DECREASE self.pending_arrears BY self.running_balance  // Reduce arrears
+            SET self.running_balance = 0  // Reset balance after deduction
+        ENDIF
+    ENDFUNCTION
+
+    // Function to return only the final outstanding arrears
+    FUNCTION get_outstanding_arrears():
+        RETURN self.pending_arrears  // Final outstanding arrears after all transactions
+    ENDFUNCTION
+ENDCLASS
+
+CATCH ERROR AS e:
+    PRINT "Error:", e  // Handle invalid input errors
+
+CATCH EXCEPTION AS ex:
+    PRINT "Unexpected Error:", ex  // Handle unexpected errors
