@@ -40,14 +40,13 @@ actions_list = [
     ("Paid", 10000),
     ("Return", 10000),
     ("Paid", 10000),
-    # ("Return", 7000),
+    ("Return", 7000),
     ("Paid", 13000),
-    # ("Paid", 7000),
+    ("Paid", 7000),
     ("Bill", 3000),
-    # ("Paid", 6000),
-    ("Paid", 10000),
+    ("Paid", 6000),
     ("Bill", 2000),
-    # ("Balance Transfer", 10000)
+    ("Balance Transfer", 10000)
 ]
 
 calculator = CommissionCalculator(35000)

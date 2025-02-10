@@ -1,0 +1,54 @@
+Initialize:
+    initial_amount = 35000
+    total_pay = 0
+    total_bill = 0
+    running_balance = 0
+    settled_balance = 0
+    cumulative_settled_balance = 0
+    pending_arrears = initial_amount
+
+For each action in actions_list:
+    If action is "Paid":
+        total_pay = total_pay + paid_amount
+        running_balance = total_pay - total_bill
+        settled_balance = running_balance - cumulative_settled_balance
+        cumulative_settled_balance = cumulative_settled_balance + settled_balance
+        pending_arrears = initial_amount - cumulative_settled_balance
+
+    Else if action is "Bill":
+        total_bill = total_bill + bill_amount
+        running_balance = total_pay - total_bill
+        settled_balance = running_balance - cumulative_settled_balance
+        cumulative_settled_balance = cumulative_settled_balance + settled_balance
+        pending_arrears = initial_amount - cumulative_settled_balance
+
+    Else if action is "Return":
+        total_pay = total_pay - return_amount
+        running_balance = total_pay - total_bill
+        settled_balance = running_balance - cumulative_settled_balance
+        cumulative_settled_balance = cumulative_settled_balance + settled_balance
+        pending_arrears = initial_amount - cumulative_settled_balance
+
+    Else if action is "Balance Transfer":
+        // Assuming balance transfer affects the total_pay and running_balance
+        total_pay = total_pay + balance_transfer_amount
+        running_balance = total_pay - total_bill
+        settled_balance = running_balance - cumulative_settled_balance
+        cumulative_settled_balance = cumulative_settled_balance + settled_balance
+        pending_arrears = initial_amount - cumulative_settled_balance
+
+    Else if action is "Agent Acknowledgment" or "Amend Plan":
+        // These actions might not directly affect financial metrics
+        // Handle accordingly, possibly just logging the action
+
+    Print or store the updated values for each action:
+        Print "Date: ", action.date
+        Print "Action: ", action.type
+        Print "Amount: ", action.amount
+        Print "Total Pay: ", total_pay
+        Print "Total Bill: ", total_bill
+        Print "Running Balance: ", running_balance
+        Print "Settled Balance: ", settled_balance
+        Print "Cumulative Settled Balance: ", cumulative_settled_balance
+        Print "Pending Arrears: ", pending_arrears
+        Print "-------------------------"
