@@ -1,4 +1,7 @@
-# Define the sup_array
+import random
+
+# Generate a sup_array with 100 rows for testing
+# sup_array = [(i, random.choice('abcdefghijklmnopqrstuvwxyz'), random.randint(1, 100)) for i in range(1, 101)]
 sup_array = [
     (1, 'b', 84),
     (2, 'n', 80),
@@ -9,77 +12,121 @@ sup_array = [
     (7, 'b', 45),
     (8, 'n', 40),
     (9, 'a', 5),
-    (10, 'x', 30)
-    
+    (10, 'c', 30),
+    # (11, 'b', 30),
+    # (12, 'a', 30),
+    # (13, 'c', 20),
+    # (14, 'c', 26),
+    # (15, 'c', 26),
+    # (16, 'c', 26),
 ]
 
-# Sort sup_array based on the integer value (ascending order)
-sup_array.sort(key=lambda x: x[2])
+# Sort sup_array by the first value (row number) in accending order
+sup_array.sort(key=lambda x: x[0])
+print(sup_array)
 
-# Initialize bk arrays and unapplied_array
+# Initialize bk arrays and unapplied array
 bk_A = []
 bk_B = []
 bk_C = []
 unapplied_array = []
 
-# Define the allowed characters for each bk array
-allowed_chars = {
-    'bk_A': {'a', 'b', 'w'},
-    'bk_B': {'c', 'b', 'e'},
-    'bk_C': {'m', 'b', 'n'}
-}
+# Define the fill limits
+bk_A_limit = 3
+bk_B_limit = 3
+bk_C_limit = 3
 
-# Define the maximum capacity for each bk array
-max_capacity = {
-    'bk_A': 4,
-    'bk_B': 3,
-    'bk_C': 4
-}
+# Define the character constraints for each bk array
+bk_A_chars = {'a', 'b', 'w'}
+bk_B_chars = {'c', 'b', 'e'}
+bk_C_chars = {'m', 'b', 'n'}
 
-# Function to check if an element can be placed in a bk array
-def can_place(element, bk_name):
-    return element[1] in allowed_chars[bk_name] and len(globals()[bk_name]) < max_capacity[bk_name]
+# Function to attempt to fill bk arrays
+def fill_bk_arrays():
+    global unapplied_array
+    unapplied_array = []
+    for row in sup_array:
+        row_num, char, value = row
+        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+            unapplied_array.append(row)
+            continue
+        if char in bk_C_chars and len(bk_C) < bk_C_limit:
+            bk_C.append(row)
+        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
+            bk_B.append(row)
+        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
+            bk_A.append(row)
+        else:
+            # Attempt to swap within the same iteration
+            swapped = False
+            if char in bk_C_chars and len(bk_C) >= bk_C_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_C):
+                    if r_char in bk_B_chars and len(bk_B) < bk_B_limit:
+                        bk_B.append(bk_C.pop(i))
+                        bk_C.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
+                        bk_A.append(bk_C.pop(i))
+                        bk_C.append(row)
+                        swapped = True
+                        break
+            if not swapped and char in bk_B_chars and len(bk_B) >= bk_B_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_B):
+                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
+                        bk_C.append(bk_B.pop(i))
+                        bk_B.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
+                        bk_A.append(bk_B.pop(i))
+                        bk_B.append(row)
+                        swapped = True
+                        break
+            if not swapped and char in bk_A_chars and len(bk_A) >= bk_A_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_A):
+                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
+                        bk_C.append(bk_A.pop(i))
+                        bk_A.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_B_chars and len(bk_B) < bk_B_limit:
+                        bk_B.append(bk_A.pop(i))
+                        bk_A.append(row)
+                        swapped = True
+                        break
+            if not swapped:
+                unapplied_array.append(row)
 
-# Function to exchange elements within the same iteration
-def exchange_elements(element, bk_name):
-    for i, existing_element in enumerate(globals()[bk_name]):
-        if existing_element[1] in allowed_chars[bk_name]:
-            # Swap the elements
-            globals()[bk_name][i] = element
-            return existing_element
-    return None
+# Function to reprocess unapplied_array
+def reprocess_unapplied():
+    global unapplied_array
+    new_unapplied = []
+    for row in unapplied_array:
+        row_num, char, value = row
+        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+            new_unapplied.append(row)
+            continue
+        if char in bk_C_chars and len(bk_C) < bk_C_limit:
+            bk_C.append(row)
+        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
+            bk_B.append(row)
+        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
+            bk_A.append(row)
+        else:
+            new_unapplied.append(row)
+    unapplied_array = new_unapplied
 
-# Iterate through the sup_array and fill the bk arrays
-for element in sup_array:
-    if element[1] not in allowed_chars['bk_A'] and element[1] not in allowed_chars['bk_B'] and element[1] not in allowed_chars['bk_C']:
-        unapplied_array.append(element)
-        continue
+# Perform the initial fill
+fill_bk_arrays()
 
-    placed = False
-    for bk_name in ['bk_A', 'bk_B', 'bk_C']:
-        if can_place(element, bk_name):
-            globals()[bk_name].append(element)
-            placed = True
-            break
-    if not placed:
-        unapplied_array.append(element)
+# Reprocess unapplied_array until no more elements can be added to bk arrays
+previous_unapplied_length = -1
+while len(unapplied_array) != previous_unapplied_length:
+    previous_unapplied_length = len(unapplied_array)
+    reprocess_unapplied()
 
-# Re-process unapplied_array until no elements can be placed
-reprocess = True
-while reprocess:
-    reprocess = False
-    for i in range(len(unapplied_array)):
-        element = unapplied_array[i]
-        for bk_name in ['bk_A', 'bk_B', 'bk_C']:
-            if can_place(element, bk_name):
-                globals()[bk_name].append(element)
-                unapplied_array.pop(i)
-                reprocess = True
-                break
-        if reprocess:
-            break
-
-# Print the results
+# Output the results
 print("bk-A:", bk_A)
 print("bk-B:", bk_B)
 print("bk-C:", bk_C)
