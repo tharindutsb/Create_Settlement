@@ -1,0 +1,104 @@
+/*
+API # :
+Name :
+Description :
+Created By :
+Created No :
+
+IP : case status
+OP : status,status description,case phase
+
+
+assumption:
+    1. The system tracks arrears, settlements, and commission calculations.
+    2. An initial arrears amount is assigned to a user upon plan creation.
+    3. Bills represent amounts paid by the customer to reduce the arrears. Bills are deducted from the arrears immediately.
+    4.The running balance reflects the available funds after each transaction (payment or bill).
+
+Initialize:
+    currentArrears = 0
+    runningBalance = 0
+    settledBalance = 0
+    pendingArrears = 0
+    transactionHistory = []  // List to store transaction records
+
+For each transaction in transactions_list:
+    If transaction is "Plan Created":
+        currentArrears = transaction.Amount
+        pendingArrears = currentArrears
+        Print "Plan Created with Initial Amount: ", currentArrears
+
+    Else if transaction is "Payment":
+        If payment is before agent acknowledgment:
+            // Defer payment until acknowledgment
+            ADD_TO_HISTORY(transaction, deferred=True)
+            Print "Payment Deferred: ", transaction.Amount
+        Else:
+            payment = transaction.Amount
+            If payment > currentArrears:
+                payment = currentArrears  // Cannot overpay
+            currentArrears = currentArrears - payment
+            runningBalance = runningBalance + payment
+            settledBalance = runningBalance - PREVIOUS_RUNNING_BALANCE()
+            pendingArrears = pendingArrears - settledBalance
+            ADD_TO_HISTORY(transaction)
+
+    Else if transaction is "Bill":
+        billAmount = transaction.Amount
+        currentArrears = currentArrears - billAmount
+        runningBalance = runningBalance - billAmount
+        settledBalance = runningBalance - PREVIOUS_RUNNING_BALANCE()
+        pendingArrears = pendingArrears - settledBalance
+        ADD_TO_HISTORY(transaction)
+
+    Else if transaction is "Amend Plan":
+        currentArrears = transaction.Amount
+        pendingArrears = currentArrears
+        ADD_TO_HISTORY(transaction)
+        Print "Plan Amended with New Amount: ", currentArrears
+
+    Else if transaction is "Agent Acknowledgment":
+        // Process deferred payments (if any)
+        Print "Agent Acknowledgment on Date: ", transaction.Date
+
+    Else if transaction is "Product Active":
+        // Handle product activation (e.g., add activation fee to arrears)
+        currentArrears = currentArrears + transaction.Amount
+        pendingArrears = pendingArrears + transaction.Amount
+        ADD_TO_HISTORY(transaction)
+        Print "Product Activated with Additional Amount: ", transaction.Amount
+
+    // Print or store the updated values for each transaction
+    Print "Date: ", transaction.Date
+    Print "Action: ", transaction.Type
+    Print "Amount: ", transaction.Amount
+    Print "Current Arrears: ", currentArrears
+    Print "Running Balance: ", runningBalance
+    Print "Settled Balance: ", settledBalance
+    Print "Pending Arrears: ", pendingArrears
+    Print "-------------------------"
+
+FUNCTION ADD_TO_HISTORY(transaction, deferred=False):
+    record = {
+        "Date": transaction.Date,
+        "Type": transaction.Type,
+        "Amount": transaction.Amount,
+        "Arrears": currentArrears,
+        "RunningBalance": runningBalance,
+        "SettledBalance": settledBalance,
+        "PendingArrears": pendingArrears,
+        "Deferred": deferred
+    }
+    transactionHistory.APPEND(record)
+
+FUNCTION PREVIOUS_RUNNING_BALANCE():
+    // Retrieve the running balance from the previous transaction
+    If LEN(transactionHistory) > 0:
+        RETURN transactionHistory[-1].RunningBalance
+    Else:
+        RETURN 0
+
+FUNCTION GENERATE_REPORT():
+    // Output transaction history in table format
+    FOR EACH record IN transactionHistory:
+        Print recordt
