@@ -1,3 +1,28 @@
+/*
+API # :
+Name :
+Description :
+Created By :
+Created No :
+
+IP : case status
+OP : status,status description,case phase
+
+
+assumption:
+    1. created_By is the user who is creating the settlement
+    2. settelment_type is the type of settlement (A or B)
+    3. settelement_amount is the amount of settlement
+    4. DRC_ID is the ID of the DRC
+    5. case_id is the ID of the case
+    6. settelement A array is the array of initial amount and number of months
+    7. settelement B array is the array of initial amount and amount of each month
+    8. monitor_array is the array of settlement A or B array
+    9. element is the element of monitor_array
+    10. setelment phase is the function to get the settlement phase
+    11. elemenet of array should be positive number
+*/
+
 // Data Structures
 STRUCT Transaction:
     Date: string
