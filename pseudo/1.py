@@ -1,29 +1,4 @@
-# sup_array = [
-#     (1, 'z', 84),
-#     (2, 'b', 80),
-#     (3, 'b', 70),
-#     (4, 'w', 65),
-#     (5, 'e', 55),
-#     (6, 'm', 50),
-#     (7, 'b', 45),
-#     (8, 'n', 40),
-#     (9, 'a', 5),
-#     (10, 'c', 30)
-# ]
-
-# sup_array = [
-#     (1, 'b', 84),
-#     (2, 'n', 80),
-#     (3, 'w', 70),
-#     (4, 'w', 65),
-#     (5, 'e', 55),
-#     (6, 'm', 50),
-#     (7, 'b', 45),
-#     (8, 'n', 40),
-#     (9, 'a', 5),
-#     (10, 'c', 30)
-# ]
-
+# Updated sup_array
 sup_array = [
     (1, 'b', 84),
     (2, 'n', 80),
@@ -37,67 +12,80 @@ sup_array = [
     (10, 'c', 30)
 ]
 
-# Initialize bk arrays and unapplied array
-bk_arrays = {
-    'A': {'array': [], 'chars': {'a', 'b', 'w'}, 'limit': 4},
-    'B': {'array': [], 'chars': {'c', 'b', 'e'}, 'limit': 3},
-    'C': {'array': [], 'chars': {'m', 'b', 'n'}, 'limit': 4}
-}
+# Separate arrays for bk-A, bk-B, bk-C, and an unapplied_array
+bk_A = []
+bk_B = []
+bk_C = []
 unapplied_array = []
 
-# Sort sup_array by the integer value in descending order
-sup_array.sort(key=lambda x: x[2], reverse=True)
+# Conditions for each bk array
+bk_conditions = {
+    'A': ['a', 'b', 'w'],
+    'B': ['c', 'b', 'e'],
+    'C': ['m', 'b', 'n']
+}
 
-# Function to attempt to fill bk arrays within a cycle
-def fill_bk_arrays_cycle(array):
-    global unapplied_array
-    unapplied_array = []
-    for row in array:
-        row_num, char, value = row
-        placed = False
-        for bk in bk_arrays.values():
-            if char in bk['chars'] and len(bk['array']) < bk['limit']:
-                bk['array'].append(row)
-                placed = True
-                break
-        if not placed:
-            unapplied_array.append(row)
+# Limiting the filling capacity of each bk array
+bk_limits = {
+    'A': 4,
+    'B': 3,
+    'C': 4
+}
 
-# Function to process the sup_array in cycles
-def process_cycles():
-    global sup_array
-    cycle_size = len(sup_array) // len(bk_arrays) + (1 if len(sup_array) % len(bk_arrays) != 0 else 0)
-    for i in range(0, len(sup_array), cycle_size):
-        cycle_array = sup_array[i:i + cycle_size]
-        fill_bk_arrays_cycle(cycle_array)
-        reprocess_unapplied()
+# Sorting sup_array based on the integer value
+sup_array.sort(key=lambda x: x[2])
 
-# Function to reprocess unapplied_array
-def reprocess_unapplied():
-    global unapplied_array
-    new_unapplied = []
-    for row in unapplied_array:
-        row_num, char, value = row
-        placed = False
-        for bk in bk_arrays.values():
-            if char in bk['chars'] and len(bk['array']) < bk['limit']:
-                bk['array'].append(row)
-                placed = True
-                break
-        if not placed:
-            new_unapplied.append(row)
-    unapplied_array = new_unapplied
+# Function to fill the bk arrays
+def fill_bk_arrays():
+    # A helper function to fill elements into the bk arrays
+    def try_fill_element(row_num, char, int_val):
+        # Try to fill in the arrays in the order A -> B -> C
+        for bk_type, condition_set in bk_conditions.items():
+            if char in condition_set and len(eval(f'bk_{bk_type}')) < bk_limits[bk_type]:
+                eval(f'bk_{bk_type}').append((row_num, char, int_val))
+                return True  # Element was placed successfully
+        return False  # Element couldn't be placed
 
-# Perform the initial cycle processing
-process_cycles()
+    # Main loop for processing the cycles
+    while sup_array:
+        # Track elements to be removed from sup_array after being processed
+        elements_to_remove = []
+        for i, row in enumerate(sup_array):
+            row_num, char, int_val = row
 
-# Reprocess unapplied_array until no more elements can be added to bk arrays
-previous_unapplied_length = -1
-while len(unapplied_array) != previous_unapplied_length:
-    previous_unapplied_length = len(unapplied_array)
-    reprocess_unapplied()
+            # Try to fill the element in the arrays
+            if not try_fill_element(row_num, char, int_val):
+                elements_to_remove.append(i)  # Mark this element as not placed
 
-# Output the results
-for bk_name, bk in bk_arrays.items():
-    print(f"bk-{bk_name}:", bk['array'])
-print("Unapplied:", unapplied_array)
+        # Remove elements that were not placed into the arrays
+        for i in reversed(elements_to_remove):
+            sup_array[i] = None
+
+        # Clean the sup_array to remove None values
+        sup_array[:] = [row for row in sup_array if row is not None]
+
+        # If there are any unapplied elements, move them to the unapplied array
+        if not sup_array:
+            break
+
+        # Move any remaining elements into the unapplied array
+        for row in sup_array:
+            if row is not None:
+                unapplied_array.append(row)
+
+        # After each cycle, process unapplied array to attempt to place again
+        temp_unapplied = []
+        for element in unapplied_array:
+            row_num, char, int_val = element
+            if not try_fill_element(row_num, char, int_val):
+                temp_unapplied.append(element)  # If can't place, add back to the temp list
+        unapplied_array[:] = temp_unapplied  # Update unapplied_array with elements that couldn't be placed
+
+# Fill the bk arrays based on the conditions
+fill_bk_arrays()
+
+# Results
+print("bk_A:", bk_A)
+print("bk_B:", bk_B)
+print("bk_C:", bk_C)
+print("Unapplied Array:", unapplied_array)
