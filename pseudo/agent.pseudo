@@ -1,0 +1,79 @@
+// Data Structures
+STRUCT Transaction:
+    Date: string
+    Type: string        // "Payment", "Bill", "Plan Created", "Amend Plan"
+    Amount: float       // Amount paid or billed
+    Arrears: float      // Remaining arrears after transaction
+    RunningBalance: float
+    SettledBalance: float
+    PendingArrears: float
+
+// Global Variables
+currentArrears = 0
+runningBalance = 0
+settledBalance = 0
+pendingArrears = 0
+transactionHistory = []  // List of Transaction objects
+
+// Main Execution
+FUNCTION main():
+    transactions = LoadTransactions()  // Load transactions from input
+    FOR EACH transaction IN transactions:
+        PROCESS_TRANSACTION(transaction)
+    GENERATE_REPORT()
+
+FUNCTION PROCESS_TRANSACTION(transaction):
+    SWITCH transaction.Type:
+        CASE "Plan Created":
+            currentArrears = transaction.Amount
+            pendingArrears = currentArrears
+        CASE "Payment":
+            IF payment is before agent acknowledgment:
+                DEFER_PAYMENT(transaction)
+            ELSE:
+                APPLY_PAYMENT(transaction)
+        CASE "Bill":
+            APPLY_BILL(transaction)
+        CASE "Amend Plan":
+            UPDATE_PLAN(transaction)
+    ENDSWITCH
+
+FUNCTION APPLY_PAYMENT(transaction):
+    payment = transaction.Amount
+    IF payment > currentArrears:
+        payment = currentArrears  // Cannot overpay
+    currentArrears -= payment
+    runningBalance += payment
+    settledBalance = runningBalance - PREVIOUS_RUNNING_BALANCE()
+    pendingArrears -= settledBalance
+    ADD_TO_HISTORY(transaction)
+
+FUNCTION APPLY_BILL(transaction):
+    billAmount = transaction.Amount
+    currentArrears -= billAmount
+    runningBalance -= billAmount
+    ADD_TO_HISTORY(transaction)
+
+FUNCTION DEFER_PAYMENT(transaction):
+    // Defer payment until agent acknowledgment
+    ADD_TO_HISTORY(transaction, deferred=True)
+
+FUNCTION UPDATE_PLAN(transaction):
+    currentArrears = transaction.Amount
+    pendingArrears = currentArrears
+    ADD_TO_HISTORY(transaction)
+
+FUNCTION ADD_TO_HISTORY(transaction, deferred=False):
+    record = NEW Transaction:
+        Date = transaction.Date
+        Type = transaction.Type
+        Amount = transaction.Amount
+        Arrears = currentArrears
+        RunningBalance = runningBalance
+        SettledBalance = settledBalance
+        PendingArrears = pendingArrears
+        Deferred = deferred
+    transactionHistory.APPEND(record)
+
+FUNCTION GENERATE_REPORT():
+    // Output transaction history in table format
