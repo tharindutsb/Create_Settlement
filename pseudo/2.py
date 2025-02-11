@@ -1,133 +1,115 @@
-import random
+from pymongo import MongoClient
 
-# Generate a sup_array with 100 rows for testing
-# sup_array = [(i, random.choice('abcdefghijklmnopqrstuvwxyz'), random.randint(1, 100)) for i in range(1, 101)]
-sup_array = [
-    (1, 'b', 84),
-    (2, 'n', 80),
-    (3, 'w', 70),
-    (4, 'w', 65),
-    (5, 'b', 55),
-    (6, 'e', 50),
-    (7, 'b', 45),
-    (8, 'n', 40),
-    (9, 'a', 5),
-    (10, 'c', 30),
-    # (11, 'b', 30),
-    # (12, 'a', 30),
-    # (13, 'c', 20),
-    # (14, 'c', 26),
-    # (15, 'c', 26),
-    # (16, 'c', 26),
-]
+# Connect to MongoDB
+client = MongoClient('mongodb://localhost:27017/')
+db = client['your_database_name']
+sup_collection = db['sup_array']
+buckets_collection = db['buckets']
 
-# Sort sup_array by the first value (row number) in accending order
-sup_array.sort(key=lambda x: x[0])
-print(sup_array)
+# Fetch sup_array from MongoDB
+sup_array = list(sup_collection.find({}, {'_id': 0}))
 
-# Initialize bk arrays and unapplied array
-bk_A = []
-bk_B = []
-bk_C = []
+# Fetch bucket configurations from MongoDB
+buckets_config = list(buckets_collection.find({}, {'_id': 0}))
+
+# Dynamically initialize buckets and their configurations
+buckets = {}
+for config in buckets_config:
+    bucket_name = config['name']  # Assuming each bucket has a 'name' field
+    buckets[bucket_name] = {
+        'limit': config['limit'],
+        'chars': set(config['chars']),
+        'rows': []
+    }
+
+# Initialize unapplied array
 unapplied_array = []
 
-# Define the fill limits
-bk_A_limit = 3
-bk_B_limit = 3
-bk_C_limit = 3
-
-# Define the character constraints for each bk array
-bk_A_chars = {'a', 'b', 'w'}
-bk_B_chars = {'c', 'b', 'e'}
-bk_C_chars = {'m', 'b', 'n'}
-
-# Function to attempt to fill bk arrays
-def fill_bk_arrays():
+# Function to attempt to fill buckets
+def fill_buckets():
     global unapplied_array
     unapplied_array = []
     for row in sup_array:
-        row_num, char, value = row
-        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+        row_num, char, value = row['row_num'], row['char'], row['value']
+        
+        # Check if all buckets are full
+        if all(len(bucket['rows']) >= bucket['limit'] for bucket in buckets.values()):
             unapplied_array.append(row)
             continue
-        if char in bk_C_chars and len(bk_C) < bk_C_limit:
-            bk_C.append(row)
-        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
-            bk_B.append(row)
-        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
-            bk_A.append(row)
-        else:
-            # Attempt to swap within the same iteration
-            swapped = False
-            if char in bk_C_chars and len(bk_C) >= bk_C_limit:
-                for i, (r_num, r_char, r_value) in enumerate(bk_C):
-                    if r_char in bk_B_chars and len(bk_B) < bk_B_limit:
-                        bk_B.append(bk_C.pop(i))
-                        bk_C.append(row)
-                        swapped = True
+        
+        # Try to add the row to the appropriate bucket
+        added = False
+        for bucket_name, bucket in buckets.items():
+            if char in bucket['chars'] and len(bucket['rows']) < bucket['limit']:
+                bucket['rows'].append(row)
+                added = True
+                break
+        
+        # If not added, attempt to swap with other buckets
+        if not added:
+            for bucket_name, bucket in buckets.items():
+                if char in bucket['chars'] and len(bucket['rows']) >= bucket['limit']:
+                    # Try to swap with another bucket
+                    for swap_bucket_name, swap_bucket in buckets.items():
+                        if swap_bucket_name != bucket_name and len(swap_bucket['rows']) < swap_bucket['limit']:
+                            # Find a row in the current bucket that can be moved to the swap bucket
+                            for i, (r_num, r_char, r_value) in enumerate(bucket['rows']):
+                                if r_char in swap_bucket['chars']:
+                                    # Swap the rows
+                                    swap_bucket['rows'].append(bucket['rows'].pop(i))
+                                    bucket['rows'].append(row)
+                                    added = True
+                                    break
+                            if added:
+                                break
+                    if added:
                         break
-                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
-                        bk_A.append(bk_C.pop(i))
-                        bk_C.append(row)
-                        swapped = True
-                        break
-            if not swapped and char in bk_B_chars and len(bk_B) >= bk_B_limit:
-                for i, (r_num, r_char, r_value) in enumerate(bk_B):
-                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
-                        bk_C.append(bk_B.pop(i))
-                        bk_B.append(row)
-                        swapped = True
-                        break
-                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
-                        bk_A.append(bk_B.pop(i))
-                        bk_B.append(row)
-                        swapped = True
-                        break
-            if not swapped and char in bk_A_chars and len(bk_A) >= bk_A_limit:
-                for i, (r_num, r_char, r_value) in enumerate(bk_A):
-                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
-                        bk_C.append(bk_A.pop(i))
-                        bk_A.append(row)
-                        swapped = True
-                        break
-                    elif r_char in bk_B_chars and len(bk_B) < bk_B_limit:
-                        bk_B.append(bk_A.pop(i))
-                        bk_A.append(row)
-                        swapped = True
-                        break
-            if not swapped:
-                unapplied_array.append(row)
+        
+        # If still not added, add to unapplied array
+        if not added:
+            unapplied_array.append(row)
 
 # Function to reprocess unapplied_array
 def reprocess_unapplied():
     global unapplied_array
     new_unapplied = []
     for row in unapplied_array:
-        row_num, char, value = row
-        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+        row_num, char, value = row['row_num'], row['char'], row['value']
+        
+        # Check if all buckets are full
+        if all(len(bucket['rows']) >= bucket['limit'] for bucket in buckets.values()):
             new_unapplied.append(row)
             continue
-        if char in bk_C_chars and len(bk_C) < bk_C_limit:
-            bk_C.append(row)
-        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
-            bk_B.append(row)
-        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
-            bk_A.append(row)
-        else:
+        
+        # Try to add the row to the appropriate bucket
+        added = False
+        for bucket_name, bucket in buckets.items():
+            if char in bucket['chars'] and len(bucket['rows']) < bucket['limit']:
+                bucket['rows'].append(row)
+                added = True
+                break
+        
+        if not added:
             new_unapplied.append(row)
+    
     unapplied_array = new_unapplied
 
 # Perform the initial fill
-fill_bk_arrays()
+fill_buckets()
 
-# Reprocess unapplied_array until no more elements can be added to bk arrays
+# Reprocess unapplied_array until no more elements can be added to buckets
 previous_unapplied_length = -1
 while len(unapplied_array) != previous_unapplied_length:
     previous_unapplied_length = len(unapplied_array)
     reprocess_unapplied()
 
 # Output the results
-print("bk-A:", bk_A)
-print("bk-B:", bk_B)
-print("bk-C:", bk_C)
+for bucket_name, bucket in buckets.items():
+    print(f"{bucket_name}: {bucket['rows']}")
 print("Unapplied:", unapplied_array)
+
+# Optionally, update MongoDB with the results
+results_collection = db['results']
+results = [{'bucket': bucket_name, 'rows': bucket['rows']} for bucket_name, bucket in buckets.items()]
+results.append({'unapplied': unapplied_array})
+results_collection.insert_many(results)
