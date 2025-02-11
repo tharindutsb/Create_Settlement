@@ -39,8 +39,6 @@ sup_array = [
     (12, 'y', 30),
     (13,'c',20),
     (14,'c',26),
-
-    
 ]
 
 # Initialize bk arrays and unapplied array
