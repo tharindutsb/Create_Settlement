@@ -51,4 +51,4 @@ For each action in actions_list:
         Print "Settled Balance: ", settled_balance
         Print "Cumulative Settled Balance: ", cumulative_settled_balance
         Print "Pending Arrears: ", pending_arrears
-        Print "-------------------------"
+        Print "-------------------------"df;
