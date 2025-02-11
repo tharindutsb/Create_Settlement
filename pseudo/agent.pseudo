@@ -13,15 +13,7 @@ assumption:
     1. The system tracks arrears, settlements, and commission calculations.
     2. An initial arrears amount is assigned to a user upon plan creation.
     3. Bills represent amounts paid by the customer to reduce the arrears. Bills are deducted from the arrears immediately.
-    4. DRC_ID is the ID of the DRC
-    5. case_id is the ID of the case
-    6. settelement A array is the array of initial amount and number of months
-    7. settelement B array is the array of initial amount and amount of each month
-    8. monitor_array is the array of settlement A or B array
-    9. element is the element of monitor_array
-    10. setelment phase is the function to get the settlement phase
-    11. elemenet of array should be positive number
-*/
+    4.
 
 // Data Structures
 STRUCT Transaction:
