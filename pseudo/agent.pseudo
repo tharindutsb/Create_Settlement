@@ -10,9 +10,9 @@ OP : status,status description,case phase
 
 
 assumption:
-    1. created_By is the user who is creating the settlement
-    2. settelment_type is the type of settlement (A or B)
-    3. settelement_amount is the amount of settlement
+    1. The system tracks arrears, settlements, and commission calculations.
+    2. An initial arrears amount is assigned to a user upon plan creation.
+    3. Bills represent amounts paid by the customer to reduce the arrears. Bills are deducted from the arrears immediately.
     4. DRC_ID is the ID of the DRC
     5. case_id is the ID of the case
     6. settelement A array is the array of initial amount and number of months
