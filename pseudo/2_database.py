@@ -21,10 +21,10 @@ sup_data = [
     {"row_number": 8, "char": "n", "value": 40},
     {"row_number": 9, "char": "a", "value": 5},
     {"row_number": 10, "char": "c", "value": 30},
-    # {"row_number": 11, "char": "m", "value": 25},
-    # {"row_number": 12, "char": "x", "value": 20},
-    # {"row_number": 13, "char": "y", "value": 15},
-    # {"row_number": 14, "char": "z", "value": 10},
+    {"row_number": 11, "char": "m", "value": 25},
+    {"row_number": 12, "char": "x", "value": 20},
+    {"row_number": 13, "char": "y", "value": 15},
+    {"row_number": 14, "char": "z", "value": 10},
 ]
 
 # Insert data into `sup_collection`
