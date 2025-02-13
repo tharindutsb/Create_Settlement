@@ -8,12 +8,13 @@ sup_array = [
     {"row_number": 6, "char": "e", "value": 50},
     {"row_number": 7, "char": "b", "value": 45},
     {"row_number": 8, "char": "n", "value": 40},
-    {"row_number": 9, "char": "a", "value": 5},
+    {"row_number": 9, "char": "a", "value": 35},
     {"row_number": 10, "char": "c", "value": 30},
     {"row_number": 11, "char": "m", "value": 25},
     {"row_number": 12, "char": "x", "value": 20},
     {"row_number": 13, "char": "y", "value": 15},
     {"row_number": 14, "char": "z", "value": 10},
+    {"row_number": 15, "char": "GG", "value": 8},
 ]
 
 # Sort sup_array by integer value (ascending order)
@@ -23,7 +24,8 @@ sup_array.sort(key=lambda x: x["value"])
 buckets = {
     "bk_A": {"limit": 4, "characters": {"a", "b", "w"}, "items": []},
     "bk_B": {"limit": 3, "characters": {"c", "b", "e"}, "items": []},
-    "bk_C": {"limit": 4, "characters": {"m", "b", "n"}, "items": []}
+    "bk_C": {"limit": 4, "characters": {"m", "b", "n"}, "items": []},
+    "bk_D": {"limit": 4, "characters": {"x", "y", "z"}, "items": []}
 }
 
 # Bucket order for round-robin filling
