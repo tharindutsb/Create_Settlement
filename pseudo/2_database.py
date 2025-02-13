@@ -20,7 +20,7 @@ sup_data = [
     {"row_number": 7, "char": "b", "value": 45},
     {"row_number": 8, "char": "n", "value": 40},
     {"row_number": 9, "char": "a", "value": 5},
-    {"row_number": 10, "char": "c", "value": 30}
+    {"row_number": 10, "char": "c", "value":30}
 ]
 
 # Insert sample data into `sup_collection`
