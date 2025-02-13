@@ -1,115 +1,121 @@
 from pymongo import MongoClient
 
 # Connect to MongoDB
-client = MongoClient('mongodb://localhost:27017/')
-db = client['your_database_name']
-sup_collection = db['sup_array']
-buckets_collection = db['buckets']
+client = MongoClient("mongodb://localhost:27017/")  # Update with your connection string
+db = client["gpt_bucket"]  # Replace with your database name
+sup_collection = db["sup_collection"]  # Collection storing sup_array data
+buckets_collection = db["buckets_collection"]  # Collection storing bucket constraints
 
 # Fetch sup_array from MongoDB
-sup_array = list(sup_collection.find({}, {'_id': 0}))
+sup_array = list(sup_collection.find({}, {"_id": 0}))  # Exclude MongoDB's `_id` field
 
 # Fetch bucket configurations from MongoDB
-buckets_config = list(buckets_collection.find({}, {'_id': 0}))
+buckets_data = list(buckets_collection.find({}, {"_id": 0}))
 
-# Dynamically initialize buckets and their configurations
+# Initialize bucket structures dynamically
 buckets = {}
-for config in buckets_config:
-    bucket_name = config['name']  # Assuming each bucket has a 'name' field
-    buckets[bucket_name] = {
-        'limit': config['limit'],
-        'chars': set(config['chars']),
-        'rows': []
-    }
-
-# Initialize unapplied array
 unapplied_array = []
 
-# Function to attempt to fill buckets
+# Process bucket configurations
+for bucket in buckets_data:
+    bucket_name = bucket["name"]
+    buckets[bucket_name] = {
+        "limit": bucket["limit"],  # Max capacity
+        "characters": set(bucket["characters"]),  # Allowed characters
+        "items": []
+    }
+
+# Sort sup_array by row number
+sup_array.sort(key=lambda x: x["row_number"])
+
+# Function to fill buckets
 def fill_buckets():
     global unapplied_array
     unapplied_array = []
-    for row in sup_array:
-        row_num, char, value = row['row_num'], row['char'], row['value']
-        
-        # Check if all buckets are full
-        if all(len(bucket['rows']) >= bucket['limit'] for bucket in buckets.values()):
-            unapplied_array.append(row)
-            continue
-        
-        # Try to add the row to the appropriate bucket
-        added = False
-        for bucket_name, bucket in buckets.items():
-            if char in bucket['chars'] and len(bucket['rows']) < bucket['limit']:
-                bucket['rows'].append(row)
-                added = True
-                break
-        
-        # If not added, attempt to swap with other buckets
-        if not added:
-            for bucket_name, bucket in buckets.items():
-                if char in bucket['chars'] and len(bucket['rows']) >= bucket['limit']:
-                    # Try to swap with another bucket
-                    for swap_bucket_name, swap_bucket in buckets.items():
-                        if swap_bucket_name != bucket_name and len(swap_bucket['rows']) < swap_bucket['limit']:
-                            # Find a row in the current bucket that can be moved to the swap bucket
-                            for i, (r_num, r_char, r_value) in enumerate(bucket['rows']):
-                                if r_char in swap_bucket['chars']:
-                                    # Swap the rows
-                                    swap_bucket['rows'].append(bucket['rows'].pop(i))
-                                    bucket['rows'].append(row)
-                                    added = True
-                                    break
-                            if added:
-                                break
-                    if added:
-                        break
-        
-        # If still not added, add to unapplied array
-        if not added:
-            unapplied_array.append(row)
 
-# Function to reprocess unapplied_array
+    for row in sup_array:
+        row_num, char, value = row["row_number"], row["char"], row["value"]
+        placed = False
+
+        # Try placing in the first available bucket
+        for bucket_name, bucket in buckets.items():
+            if char in bucket["characters"] and len(bucket["items"]) < bucket["limit"]:
+                bucket["items"].append(row)
+                placed = True
+                break
+
+        # If placement fails, attempt swapping
+        if not placed:
+            swapped = False
+            for bucket_name, bucket in buckets.items():
+                if len(bucket["items"]) >= bucket["limit"]:  # Full bucket
+                    for i, existing_row in enumerate(bucket["items"]):
+                        existing_char = existing_row["char"]
+
+                        # Check if existing item can be swapped with the new row
+                        for target_bucket_name, target_bucket in buckets.items():
+                            if existing_char in target_bucket["characters"] and len(target_bucket["items"]) < target_bucket["limit"]:
+                                # Swap items
+                                target_bucket["items"].append(bucket["items"].pop(i))
+                                bucket["items"].append(row)
+                                swapped = True
+                                break
+                        if swapped:
+                            break
+                if swapped:
+                    break
+
+            # If swapping fails, add to unapplied
+            if not swapped:
+                unapplied_array.append(row)
+
+# Function to reprocess unapplied rows
 def reprocess_unapplied():
     global unapplied_array
     new_unapplied = []
+
     for row in unapplied_array:
-        row_num, char, value = row['row_num'], row['char'], row['value']
-        
-        # Check if all buckets are full
-        if all(len(bucket['rows']) >= bucket['limit'] for bucket in buckets.values()):
-            new_unapplied.append(row)
-            continue
-        
-        # Try to add the row to the appropriate bucket
-        added = False
+        row_num, char, value = row["row_number"], row["char"], row["value"]
+        placed = False
+
+        # Try placing again
         for bucket_name, bucket in buckets.items():
-            if char in bucket['chars'] and len(bucket['rows']) < bucket['limit']:
-                bucket['rows'].append(row)
-                added = True
+            if char in bucket["characters"] and len(bucket["items"]) < bucket["limit"]:
+                bucket["items"].append(row)
+                placed = True
                 break
-        
-        if not added:
+
+        # If still not placed, keep in unapplied
+        if not placed:
             new_unapplied.append(row)
-    
+
     unapplied_array = new_unapplied
 
-# Perform the initial fill
+# Perform initial bucket filling
 fill_buckets()
 
-# Reprocess unapplied_array until no more elements can be added to buckets
+# Reprocess unapplied rows until no further changes occur
 previous_unapplied_length = -1
 while len(unapplied_array) != previous_unapplied_length:
     previous_unapplied_length = len(unapplied_array)
     reprocess_unapplied()
 
-# Output the results
+# Output results
 for bucket_name, bucket in buckets.items():
-    print(f"{bucket_name}: {bucket['rows']}")
+    print(f"{bucket_name}: {bucket['items']}")
 print("Unapplied:", unapplied_array)
 
-# Optionally, update MongoDB with the results
-results_collection = db['results']
-results = [{'bucket': bucket_name, 'rows': bucket['rows']} for bucket_name, bucket in buckets.items()]
-results.append({'unapplied': unapplied_array})
-results_collection.insert_many(results)
+# Update MongoDB with results
+for bucket_name, bucket in buckets.items():
+    buckets_collection.update_one(
+        {"name": bucket_name},
+        {"$set": {"filled_items": bucket["items"]}},
+        upsert=True
+    )
+
+# Store unapplied items in MongoDB
+db["unapplied_collection"].delete_many({})
+if unapplied_array:
+    db["unapplied_collection"].insert_many(unapplied_array)
+
+print("Buckets and unapplied items updated in MongoDB.")
