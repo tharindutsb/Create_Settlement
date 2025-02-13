@@ -1,81 +1,130 @@
-import numpy as np
-from collections import deque
+import random
 
-# Generate a sample sup_array with 100 rows (row number, character, integer value)
-np.random.seed(42)  # For reproducibility
-characters = list("abcdefghijklmnopqrstuvwxyz")
-sup_array = np.array(
-    [[i, np.random.choice(characters), np.random.randint(1, 100)] for i in range(1, 101)],
-    dtype=object
-)
+# Generate a sup_array with 100 rows for testing
+# sup_array = [(i, random.choice('abcdefghijklmnopqrstuvwxyz'), random.randint(1, 100)) for i in range(1, 101)]
+sup_array = [
+    (1, 'b', 84),
+    (2, 'n', 80),
+    (3, 'w', 70),
+    (4, 'w', 65),
+    (5, 'b', 55),
+    (6, 'e', 50),
+    (7, 'b', 45),
+    (8, 'n', 40),
+    (9, 'a', 5),
+    (10, 'c', 30),
+    # (11, 'b', 30),
+    # (12, 'a', 30),
+    # (13, 'c', 20),
+    # (14, 'c', 26),
+    # (15, 'c', 26),
+    # (16, 'c', 26),
+]
 
-# Sorting sup_array by integer value (Condition 5)
-sup_array = sup_array[sup_array[:, 2].argsort()]
+# Initialize bk arrays and unapplied arrays
+bk_A = []
+bk_B = []
+bk_C = []
+permanent_unapplied_array = []  # Permanent unapplied array
+temp_unapplied_array = []  # Temporary unapplied array
 
-# BK array filling conditions
-bk_conditions = {
-    "A": {"chars": {"a", "b", "w"}, "limit": 4},
-    "B": {"chars": {"c", "b", "e"}, "limit": 3},
-    "C": {"chars": {"m", "b", "n"}, "limit": 4},
-}
+# Define the fill limits
+bk_A_limit = 3
+bk_B_limit = 3
+bk_C_limit = 3
 
-# Initialize bk arrays and unapplied_array
-bk_A, bk_B, bk_C = deque(), deque(), deque()
-unapplied_array = deque()
-bk_list = [bk_A, bk_B, bk_C]
+# Define the character constraints for each bk array
+bk_A_chars = {'a', 'b', 'w'}
+bk_B_chars = {'c', 'b', 'e'}
+bk_C_chars = {'m', 'b', 'n'}
 
-# Function to check and fill BK arrays
+# Function to attempt to fill bk arrays
 def fill_bk_arrays():
-    global unapplied_array
-    unapplied = deque()
-    
+    global temp_unapplied_array
+    temp_unapplied_array = []  # Reset temporary unapplied array for each cycle
     for row in sup_array:
         row_num, char, value = row
-        placed = False
-        
-        for bk, (bk_name, condition) in zip(bk_list, bk_conditions.items()):
-            if char in condition["chars"] and len(bk) < condition["limit"]:
-                bk.append(row)
-                placed = True
-                break
-        
-        if not placed:
-            unapplied.append(row)
-    
-    unapplied_array = unapplied
+        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+            temp_unapplied_array.append(row)  # Add to temporary unapplied if all buckets are full
+            continue
+        if char in bk_C_chars and len(bk_C) < bk_C_limit:
+            bk_C.append(row)
+        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
+            bk_B.append(row)
+        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
+            bk_A.append(row)
+        else:
+            # Attempt to swap within the same iteration
+            swapped = False
+            if char in bk_C_chars and len(bk_C) >= bk_C_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_C):
+                    if r_char in bk_B_chars and len(bk_B) < bk_B_limit:
+                        bk_B.append(bk_C.pop(i))
+                        bk_C.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
+                        bk_A.append(bk_C.pop(i))
+                        bk_C.append(row)
+                        swapped = True
+                        break
+            if not swapped and char in bk_B_chars and len(bk_B) >= bk_B_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_B):
+                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
+                        bk_C.append(bk_B.pop(i))
+                        bk_B.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_A_chars and len(bk_A) < bk_A_limit:
+                        bk_A.append(bk_B.pop(i))
+                        bk_B.append(row)
+                        swapped = True
+                        break
+            if not swapped and char in bk_A_chars and len(bk_A) >= bk_A_limit:
+                for i, (r_num, r_char, r_value) in enumerate(bk_A):
+                    if r_char in bk_C_chars and len(bk_C) < bk_C_limit:
+                        bk_C.append(bk_A.pop(i))
+                        bk_A.append(row)
+                        swapped = True
+                        break
+                    elif r_char in bk_B_chars and len(bk_B) < bk_B_limit:
+                        bk_B.append(bk_A.pop(i))
+                        bk_A.append(row)
+                        swapped = True
+                        break
+            if not swapped:
+                temp_unapplied_array.append(row)  # Add to temporary unapplied if no swap is possible
 
-# Function to process unapplied elements
-def reprocess_unapplied():
-    global unapplied_array
-    new_unapplied = deque()
-    
-    for row in unapplied_array:
+# Function to reprocess temp_unapplied_array
+def reprocess_temp_unapplied():
+    global temp_unapplied_array, permanent_unapplied_array
+    new_temp_unapplied = []
+    for row in temp_unapplied_array:
         row_num, char, value = row
-        placed = False
-        
-        for bk, (bk_name, condition) in zip(bk_list, bk_conditions.items()):
-            if char in condition["chars"] and len(bk) < condition["limit"]:
-                bk.append(row)
-                placed = True
-                break
-        
-        if not placed:
-            new_unapplied.append(row)
-    
-    unapplied_array = new_unapplied
+        if len(bk_A) >= bk_A_limit and len(bk_B) >= bk_B_limit and len(bk_C) >= bk_C_limit:
+            permanent_unapplied_array.append(row)  # Move to permanent unapplied if all buckets are full
+            continue
+        if char in bk_C_chars and len(bk_C) < bk_C_limit:
+            bk_C.append(row)
+        elif char in bk_B_chars and len(bk_B) < bk_B_limit:
+            bk_B.append(row)
+        elif char in bk_A_chars and len(bk_A) < bk_A_limit:
+            bk_A.append(row)
+        else:
+            new_temp_unapplied.append(row)  # Keep in temporary unapplied for next cycle
+    temp_unapplied_array = new_temp_unapplied
 
-# Fill BK arrays initially
+# Perform the initial fill
 fill_bk_arrays()
 
-# Reprocess unapplied elements until no more elements can be placed
-while unapplied_array:
-    prev_unapplied_size = len(unapplied_array)
-    reprocess_unapplied()
-    if len(unapplied_array) == prev_unapplied_size:
-        break  # Stop if no more elements can be placed
+# Reprocess temp_unapplied_array until no more elements can be added to bk arrays
+previous_temp_unapplied_length = -1
+while len(temp_unapplied_array) != previous_temp_unapplied_length:
+    previous_temp_unapplied_length = len(temp_unapplied_array)
+    reprocess_temp_unapplied()
 
-# Print results
-print("BK-A:", list(bk_A))
-print("BK-B:", list(bk_B))
-print("BK-C:", list(bk_C))
-print("Unapplied:", list(unapplied_array))
+# Output the results
+print("bk-A:", bk_A)
+print("bk-B:", bk_B)
+print("bk-C:", bk_C)
+print("Permanent Unapplied:", permanent_unapplied_array)
