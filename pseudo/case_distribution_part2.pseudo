@@ -15,40 +15,67 @@
       
 
    ********* Important Variables ************
-
+    
    """
    # Initialize an empty dictionary to store the count of cases for each DRC
-   drc_case_count = {}
+   drc_case_dict = {}
+
+   #get the drc rtom mapping
+   drc_rtoms_mapping{}
+  
+  # Get the required DRCs rtom
+    drc_required_rtom =[drc_id,rtom]
+
+  # check the validity of the drcs and rtoms status
+    if drc_required_rtom in drc_rtoms_mapping:
+     if drc_required_rtom in drc_case_dict:
+      drc_rejected rtom[]
+      break
+    else approved to Distribute cases to DRCs rtoms 
+
+
+
+    
+
   
 
-Processed_case_list : {1: ['D1', 'CW'], 2: ['D3', 'GP'], 3: ['D1', 'CW'], 5: ['D2', 'AD'], 4: ['D3', 'CW'], 7: ['D1', 'CW'], 6: ['D2', 'AG'], 8: ['D2', 'AG']}
 
-# Iterate over the processed_case_list to count the cases/rtoms for each DRC
-processed_drc_rtoms_list{D1:2,D2:3, D3:2}
-drc_rtoms_list example {'D1': 50, 'D2': 20, 'D3': 30}
-drc_avalability_list example {'D1': 100, 'D2': 80, 'D3':00}
-
-if drc[] status not 
-
-// Function to allocate cases
-function allocate_cases(Processed_case_list, drc_avalability_list):
-    // Initialize allocation dictionary
-    allocation = {'D1': [], 'D2': [], 'D3': []}
     
-    // Iterate through the processed case list
-    for case_id, case_info in Processed_case_list:
-        drc = case_info[0]
-        if drc_avalability_list[drc] > 0:
-            allocation[drc].append(case_id)
-            drc_avalability_list[drc] -= 1
-        else:
-            // Handle case where DRC is not available
-            // ...existing code...
 
-    return allocation
 
-// Example usage
-Processed_case_list = {1: ['D1', 'CW'], 2: ['D3', 'GP'], 3: ['D1', 'CW'], 5: ['D2', 'AD'], 4: ['D3', 'CW'], 7: ['D1', 'CW'], 6: ['D2', 'AG'], 8: ['D2', 'AG']}
-drc_avalability_list = {'D1': m, 'D2': n, 'D3': o}
-allocated_cases = allocate_cases(Processed_case_list, drc_avalability_list)
-print(allocated_cases)
+
+
+// # Iterate over the processed_case_list to count the cases/rtoms for each DRC mapping
+// check with drc_rtoms_mapping 
+// processed_drc_rtoms_list{D1:2,D2:3, D3:2}
+// drc_rtoms_list example {'D1': 50, 'D2': 20, 'D3': 30}
+// drc_avalability_list example {'D1': 100, 'D2': 80, 'D3':00}
+
+
+
+// not _allocated_cases_rtom = 0
+
+// if drc[] status not 
+
+// // Function to allocate cases
+// function allocate_cases(Processed_case_list, drc_avalability_list):
+//     // Initialize allocation dictionary
+//     allocation = {'D1': [], 'D2': [], 'D3': []}
+    
+//     // Iterate through the processed case list
+//     for case_id, case_info in Processed_case_list:
+//         drc = case_info[0]
+//         if drc_avalability_list[drc] > 0:
+//             allocation[drc].append(case_id)
+//             drc_avalability_list[drc] -= 1
+//         else:
+//             // Handle case where DRC is not available
+//             // ...existing code...
+
+//     return allocation
+
+// // Example usage
+// Processed_case_list = {1: ['D1', 'CW'], 2: ['D3', 'GP'], 3: ['D1', 'CW'], 5: ['D2', 'AD'], 4: ['D3', 'CW'], 7: ['D1', 'CW'], 6: ['D2', 'AG'], 8: ['D2', 'AG']}
+// drc_avalability_list = {'D1': m, 'D2': n, 'D3': o}
+// allocated_cases = allocate_cases(Processed_case_list, drc_avalability_list)
+// print(allocated_cases)
