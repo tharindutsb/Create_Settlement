@@ -17,21 +17,40 @@
    ********* Important Variables ************
     
    """
-   # Initialize an empty dictionary to store the count of cases for each DRC
+   # previously processs distributed drc's atoms processed_case_list = drc_case_dict
    drc_case_dict = {}
+   
+  # get each of drcs cases count 
+   drcs_cases_count = {"d1":30 ,"d2":10 , d3 :15}
+
+  
 
    #get the drc rtom mapping
    drc_rtoms_mapping{}
   
   # Get the required DRCs rtom
-    drc_required_rtom =[drc_id,rtom]
+    drc_required_rtom =[drc_id,rtom,count]
 
-  # check the validity of the drcs and rtoms status
+  # check the availability of the drcs and rtoms 
     if drc_required_rtom in drc_rtoms_mapping:
-     if drc_required_rtom in drc_case_dict:
-      drc_rejected rtom[]
-      break
-    else approved to Distribute cases to DRCs rtoms 
+      msg: ("drc_required_rtom does not exist")
+
+  # check drc_required_rtoms in drc_case_dict 
+    condition this will be check not distributed rtoms in the system
+
+    if drc_required_rtom in drc_case_dict:
+      drc_required_accepted_rtom_[]
+    else 
+      msg: (Drc required rtom already distributed)
+
+# rtom distribution ratios
+drcs_rtom_ratios {"d1":50 ,"d2":20 , d3 :30}
+
+
+
+
+      
+    
 
 
 
